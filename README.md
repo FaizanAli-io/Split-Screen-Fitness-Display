@@ -15,18 +15,20 @@ A professional video management application built with Next.js for large display
 
 ### Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - npm or yarn
 
 ### Installation
 
 1. Clone the repository
 2. Install dependencies:
+
    ```bash
    npm install
    ```
 
 3. Run the development server:
+
    ```bash
    npm run dev
    ```
@@ -36,21 +38,25 @@ A professional video management application built with Next.js for large display
 ## Usage
 
 ### Adding Videos
+
 - Place video files in the `/public/videos/` folder
 - Use the drag & drop upload area to add videos
 - Videos will automatically appear in the video library
 
 ### Video Assignment
+
 - Use the control panel to assign videos to each player
 - Select "No video" to clear a player
 - Use "Clear All Assignments" to reset all players
 
 ### TV Mode
+
 - Click "TV Mode" to enter fullscreen mode
 - Press ESC to exit fullscreen
 - Move mouse to show/hide controls
 
 ### Global Controls
+
 - "Play All" / "Pause All" to control all videos
 - "Mute All" / "Unmute All" to control audio
 
@@ -75,7 +81,7 @@ chroma-stream-nextjs/
 │   ├── VideoPlayer.jsx   # Individual video player
 │   ├── ControlPanel.jsx  # Video assignment controls
 │   ├── VideoUpload.jsx   # File upload component
-│   ├── FullscreenView.jsx # TV mode component
+│   ├── FullScreenView.jsx # TV mode component
 │   └── GlobalControls.jsx # Global play/mute controls
 ├── hooks/                # Custom React hooks
 ├── lib/                  # Utility functions

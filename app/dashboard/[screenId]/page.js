@@ -9,7 +9,7 @@ import { useWebSocket } from "@/hooks/useWebSocket";
 
 import VideoPlayer from "@/components/VideoPlayer";
 import ControlPanel from "@/components/ControlPanel";
-import FullscreenView from "@/components/FullScreenView";
+import FullScreenView from "@/components/FullScreenView";
 import GlobalControls from "@/components/GlobalControls";
 
 export default function Home() {
@@ -256,7 +256,7 @@ export default function Home() {
 
   if (isFullscreen) {
     return (
-      <FullscreenView
+      <FullScreenView
         assignments={assignments}
         onClose={exitFullscreen}
         globalTimer3={globalTimers.timer3}

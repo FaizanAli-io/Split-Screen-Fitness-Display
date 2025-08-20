@@ -12,7 +12,7 @@ import ClassCountdownModal from "./FullScreenView/ClassCountdownModal";
 
 const CURSOR_HIDE_DELAY = 3000;
 
-const FullscreenView = ({ assignments, onClose, globalTimer3, globalTimers, screenId }) => {
+const FullScreenView = ({ assignments, onClose, globalTimer3, globalTimers, screenId }) => {
   const [isAllMuted, setIsAllMuted] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [isAllPlaying, setIsAllPlaying] = useState(false);
@@ -129,7 +129,7 @@ const FullscreenView = ({ assignments, onClose, globalTimer3, globalTimers, scre
     const handleSyncPlay = (event) => {
       const { targetScreens } = event.detail;
       if (targetScreens.includes(screenId)) {
-        console.log("🎬 FullscreenView responding to sync play");
+        console.log("🎬 FullScreenView responding to sync play");
 
         videoRefs.current.forEach((ref, index) => {
           if (ref && assignments[index] && ref.syncPlay) {
@@ -156,7 +156,7 @@ const FullscreenView = ({ assignments, onClose, globalTimer3, globalTimers, scre
     const handleSyncPause = (event) => {
       const { targetScreens } = event.detail;
       if (targetScreens.includes(screenId)) {
-        console.log("⏸️ FullscreenView responding to sync pause");
+        console.log("⏸️ FullScreenView responding to sync pause");
 
         videoRefs.current.forEach((ref, index) => {
           if (ref && assignments[index] && ref.syncPause) {
@@ -268,5 +268,5 @@ const FullscreenView = ({ assignments, onClose, globalTimer3, globalTimers, scre
   );
 };
 
-export default FullscreenView;
+export default FullScreenView;
 export { RectangularTimer };
