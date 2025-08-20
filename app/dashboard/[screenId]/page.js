@@ -4,12 +4,13 @@ import { useParams } from "next/navigation";
 import { Maximize, Monitor, Settings } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
 
+import { Button } from "@/components/ui/button";
 import { useWebSocket } from "@/hooks/useWebSocket";
-import { Button } from "../../../components/ui/button";
-import VideoPlayer from "../../../components/VideoPlayer";
-import ControlPanel from "../../../components/ControlPanel";
-import FullscreenView from "../../../components/FullscreenView";
-import GlobalControls from "../../../components/GlobalControls";
+
+import VideoPlayer from "@/components/VideoPlayer";
+import ControlPanel from "@/components/ControlPanel";
+import FullscreenView from "@/components/FullScreenView";
+import GlobalControls from "@/components/GlobalControls";
 
 export default function Home() {
   const { screenId } = useParams();
@@ -18,6 +19,7 @@ export default function Home() {
   const [apiError, setApiError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAllMuted, setIsAllMuted] = useState(false);
+  const [configLoaded, setConfigLoaded] = useState(false);
   const [isAllPlaying, setIsAllPlaying] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [assignments, setAssignments] = useState(Array(6).fill(null));
@@ -64,7 +66,6 @@ export default function Home() {
       });
 
       setAssignments(newAssignments);
-      console.log("✅ Random assignments applied:", newAssignments);
     };
 
     return () => {
@@ -133,9 +134,7 @@ export default function Home() {
 
       setVideos(videoData);
 
-      // Handle new config structure
       if (configData.videoAssignments && configData.globalTimers) {
-        // New structure: separate video assignments and global timers
         const newAssignments = Array(6)
           .fill(null)
           .map((_, i) => {
@@ -160,7 +159,6 @@ export default function Home() {
         setAssignments(newAssignments);
         setGlobalTimers(configData.globalTimers);
       } else {
-        // Fallback for legacy format or default values
         const newAssignments = Array(6).fill(null);
         setAssignments(newAssignments);
         setGlobalTimers({
@@ -179,6 +177,7 @@ export default function Home() {
       setApiError(`Failed to load data: ${err.message}`);
     } finally {
       setIsLoading(false);
+      setConfigLoaded(true);
     }
   };
 
@@ -187,9 +186,10 @@ export default function Home() {
   }, [screenId]);
 
   useEffect(() => {
+    if (!configLoaded) return;
+
     const timeout = setTimeout(async () => {
       try {
-        // Create new config structure - save both assignments and globalTimers
         const configData = {
           videoAssignments: assignments.map((assignment) =>
             assignment
@@ -214,7 +214,7 @@ export default function Home() {
     }, 500);
 
     return () => clearTimeout(timeout);
-  }, [assignments, globalTimers, screenId]);
+  }, [assignments, globalTimers, screenId, configLoaded]);
 
   const handleAssignVideo = (index, videoUrl) => {
     const newAssignments = [...assignments];
