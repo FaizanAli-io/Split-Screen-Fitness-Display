@@ -1,14 +1,14 @@
 import { useSearchParams } from "next/navigation";
 import React, { useEffect, useState, useRef, useCallback } from "react";
 
-import useTimerManagement from "./FullScreenView/useTimerManagement";
+import useTimerManagement from "./useTimerManagement";
 
-import VideoGrid from "./FullScreenView/VideoGrid";
-import LoadingOverlay from "./FullScreenView/LoadingOverlay";
-import FullscreenHeader from "./FullScreenView/FullScreenHeader";
-import RectangularTimer from "./FullScreenView/RectangularTimer";
-import FullscreenControls from "./FullScreenView/FullScreenControls";
-import ClassCountdownModal from "./FullScreenView/ClassCountdownModal";
+import VideoGrid from "./VideoGrid";
+import LoadingOverlay from "./LoadingOverlay";
+import FullscreenHeader from "./FullScreenHeader";
+import RectangularTimer from "./RectangularTimer";
+import FullscreenControls from "./FullScreenControls";
+import ClassCountdownModal from "./ClassCountdownModal";
 
 const CURSOR_HIDE_DELAY = 3000;
 

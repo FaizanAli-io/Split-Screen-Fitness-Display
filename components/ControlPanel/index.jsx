@@ -1,14 +1,14 @@
 import React from "react";
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 import { Info, Monitor, RotateCcw } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
-import VideoManagement from "./ControlPanel/VideoManagement";
-import DisplayManagement from "./ControlPanel/DisplayManagement";
-import GlobalTimerControls from "./ControlPanel/GlobalTimerControls";
-import PlayerConfiguration from "./ControlPanel/PlayerConfiguration";
-import { useVideoOperations } from "../hooks/useVideoOperations";
-import { useTimerControls } from "../hooks/useTimerControls";
+import VideoManagement from "./VideoManagement";
+import DisplayManagement from "./DisplayManagement";
+import GlobalTimerControls from "./GlobalTimerControls";
+import PlayerConfiguration from "./PlayerConfiguration";
+import { useVideoOperations } from "../../hooks/useVideoOperations";
+import { useTimerControls } from "../../hooks/useTimerControls";
 
 const ControlPanel = ({
   videos,
