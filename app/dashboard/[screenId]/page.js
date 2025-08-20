@@ -119,7 +119,7 @@ export default function Home() {
     }
   };
 
-  const fetchConfigAndVideos = async () => {
+  const fetchConfigAndVideos = useCallback(async () => {
     try {
       const [configRes, videoData] = await Promise.all([
         fetch(`/api/configs/${screenId}`).catch(() => ({ ok: false, json: async () => ({}) })),
@@ -175,11 +175,11 @@ export default function Home() {
       setIsLoading(false);
       setConfigLoaded(true);
     }
-  };
+  }, [screenId]);
 
   useEffect(() => {
     fetchConfigAndVideos();
-  }, [screenId]);
+  }, [fetchConfigAndVideos]);
 
   useEffect(() => {
     if (!configLoaded) return;

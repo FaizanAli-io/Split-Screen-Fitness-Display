@@ -47,7 +47,7 @@ export default function ScreenControlPanel() {
 
   const selectAllScreens = useCallback(() => {
     setSelectedScreens(new Set(screenIds));
-  }, []);
+  }, [screenIds]);
 
   const clearAllSelections = useCallback(() => {
     setSelectedScreens(new Set());
