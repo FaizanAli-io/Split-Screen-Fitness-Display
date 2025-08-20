@@ -35,9 +35,7 @@ export default function Home() {
     delayText1: "Move to the next station"
   });
 
-  const { isConnected, connectedScreens, sendSyncPlay, sendSyncPause } = useWebSocket(
-    `control-${screenId}`
-  );
+  const { isConnected, connectedScreens, sendSyncPlay, sendSyncPause } = useWebSocket(screenId);
 
   const syncDebounceRef = useRef({ lastSync: 0, debounceMs: 300 });
 
@@ -81,9 +79,7 @@ export default function Home() {
   };
 
   const getActiveScreens = () =>
-    assignments
-      .map((assignment, index) => (assignment ? `screen-${index + 1}` : null))
-      .filter(Boolean);
+    assignments.map((assignment, index) => (assignment ? index + 1 : null)).filter(Boolean);
 
   const handleSyncPlayAll = () => {
     if (!isConnected) return console.warn("WebSocket not connected");
