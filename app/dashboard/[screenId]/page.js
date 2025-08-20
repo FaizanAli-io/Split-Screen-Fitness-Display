@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { Maximize, Monitor, Settings } from "lucide-react";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useWebSocket } from "@/hooks/useWebSocket";
