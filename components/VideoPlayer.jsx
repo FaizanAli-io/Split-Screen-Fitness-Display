@@ -42,26 +42,25 @@ const VideoPlayer = forwardRef(
     {
       src,
       index,
-      isFullscreen = false,
       globalTimer3,
       timer2TimeLeft,
-      timer2Active,
-      onReadyToPlay = () => {},
-      onVideoError = () => {},
+      isFullscreen = false,
       externalTimer = null,
-      onTimerExpired = null
+      onTimerExpired = null,
+      onVideoError = () => {},
+      onReadyToPlay = () => {}
     },
     ref
   ) => {
     const videoRef = useRef(null);
-    const [isPlaying, setIsPlaying] = useState(false);
     const [isMuted, setIsMuted] = useState(true);
-    const [showControls, setShowControls] = useState(true);
-    const [videoLoaded, setVideoLoaded] = useState(false);
+    const [isPlaying, setIsPlaying] = useState(false);
     const [videoError, setVideoError] = useState(false);
+    const [videoLoaded, setVideoLoaded] = useState(false);
+    const [showControls, setShowControls] = useState(true);
     const [showSyncIndicator, setShowSyncIndicator] = useState(false);
 
-    // 🔥 REMOVED: Internal timer states - now managed externally
+    // Internal timer states - now managed externally
     const readyCallbackRef = useRef(false);
 
     // Check if this is the middle top video (Timer 2)
@@ -77,47 +76,59 @@ const VideoPlayer = forwardRef(
       return `screen-${index + 1}`;
     };
 
-    // 🔥 OPTIMIZED: WebSocket sync event listeners (no timer management)
+    // WebSocket sync event listeners (with stop support)
     useEffect(() => {
       const handleSyncPlay = (event) => {
-        const { targetScreens, timestamp } = event.detail;
         const screenId = getScreenIdFromURL();
+        const { targetScreens } = event.detail;
 
         if (targetScreens.includes(screenId)) {
           if (videoRef.current && videoLoaded && !videoError) {
-            videoRef.current.currentTime = 0;
             videoRef.current.play().catch(console.error);
             setIsPlaying(true);
-
-            // Show sync indicator
-            setShowSyncIndicator(true);
-            setTimeout(() => setShowSyncIndicator(false), 2000);
           }
         }
       };
 
       const handleSyncPause = (event) => {
-        const { targetScreens, timestamp } = event.detail;
         const screenId = getScreenIdFromURL();
+        const { targetScreens } = event.detail;
 
         if (targetScreens.includes(screenId)) {
           if (videoRef.current) {
             videoRef.current.pause();
             setIsPlaying(false);
-
-            // Show sync indicator
-            setShowSyncIndicator(true);
-            setTimeout(() => setShowSyncIndicator(false), 2000);
           }
         }
       };
 
-      window.addEventListener("websocket-sync-play", handleSyncPlay);
-      window.addEventListener("websocket-sync-pause", handleSyncPause);
+      const handleSyncStop = (event) => {
+        const screenId = getScreenIdFromURL();
+        const { targetScreens } = event.detail;
+
+        if (targetScreens.includes(screenId)) {
+          if (videoRef.current) {
+            videoRef.current.pause();
+            videoRef.current.currentTime = 0;
+            setIsPlaying(false);
+          }
+        }
+      };
+
+      const events = [
+        ["play", handleSyncPlay],
+        ["pause", handleSyncPause],
+        ["stop", handleSyncStop]
+      ];
+
+      events.forEach(([action, listener]) => {
+        window.addEventListener(`websocket-sync-${action}`, listener);
+      });
 
       return () => {
-        window.removeEventListener("websocket-sync-play", handleSyncPlay);
-        window.removeEventListener("websocket-sync-pause", handleSyncPause);
+        events.forEach(([action, listener]) => {
+          window.removeEventListener(`websocket-sync-${action}`, listener);
+        });
       };
     }, [index, videoLoaded, videoError]);
 
@@ -169,6 +180,11 @@ const VideoPlayer = forwardRef(
       }
     }, [globalTimer3, isPlaying, index]);
 
+    const toggleShowSyncIndicator = () => {
+      setTimeout(() => setShowSyncIndicator(false), 500);
+      setShowSyncIndicator(true);
+    };
+
     useImperativeHandle(ref, () => ({
       play: () => {
         if (videoRef.current && src && globalTimer3 > 0 && videoLoaded && !videoError) {
@@ -202,19 +218,19 @@ const VideoPlayer = forwardRef(
           setIsMuted(false);
         }
       },
-      isPlaying,
       isMuted,
-      isLoaded: videoLoaded,
+      isPlaying,
       hasError: videoError,
+      isLoaded: videoLoaded,
+
       // WebSocket sync methods
       syncPlay: async () => {
         if (!videoRef.current || !videoLoaded || videoError) return;
         try {
-          videoRef.current.currentTime = 0;
-          await videoRef.current.play();
           setIsPlaying(true);
-          setShowSyncIndicator(true);
-          setTimeout(() => setShowSyncIndicator(false), 2000);
+          toggleShowSyncIndicator();
+          await videoRef.current.play();
+          videoRef.current.currentTime = 0;
         } catch (error) {
           console.error(`❌ Sync play failed on video ${index}:`, error);
         }
@@ -222,10 +238,9 @@ const VideoPlayer = forwardRef(
       syncPause: async () => {
         if (!videoRef.current) return;
         try {
-          videoRef.current.pause();
           setIsPlaying(false);
-          setShowSyncIndicator(true);
-          setTimeout(() => setShowSyncIndicator(false), 2000);
+          toggleShowSyncIndicator();
+          await videoRef.current.pause();
         } catch (error) {
           console.error(`❌ Sync pause failed on video ${index}:`, error);
         }

@@ -33,12 +33,11 @@ const FullscreenHeader = ({
 
           <div className="flex items-center justify-center">
             <Image
-              src="/logo.jpeg"
               alt="Logo"
-              width={300}
-              height={150}
+              width={100}
+              height={100}
+              src="/logo.svg"
               className="object-contain drop-shadow-2xl"
-              priority
             />
           </div>
 

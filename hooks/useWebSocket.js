@@ -76,22 +76,15 @@ export const useWebSocket = (screenId = null) => {
     });
 
     if (screenId && screenId !== "control_panel") {
-      socketInstance.on("play_command", (data) => {
-        console.log("🎬 Received play command:", data);
-        window.dispatchEvent(
-          new CustomEvent("websocket-sync-play", {
-            detail: { targetScreens: [screenId], timestamp: data.timestamp }
-          })
-        );
-      });
-
-      socketInstance.on("pause_command", (data) => {
-        console.log("⏸️ Received pause command:", data);
-        window.dispatchEvent(
-          new CustomEvent("websocket-sync-pause", {
-            detail: { targetScreens: [screenId], timestamp: data.timestamp }
-          })
-        );
+      ["play", "pause", "stop"].forEach((cmd) => {
+        socketInstance.on(`${cmd}_command`, (data) => {
+          console.log(`Received ${cmd} command:`, data);
+          window.dispatchEvent(
+            new CustomEvent(`websocket-sync-${cmd}`, {
+              detail: { targetScreens: [screenId], timestamp: data.timestamp }
+            })
+          );
+        });
       });
     }
 
@@ -119,14 +112,6 @@ export const useWebSocket = (screenId = null) => {
     } else {
       console.warn("⚠️ Cannot emit - socket not connected:", event, data);
     }
-  };
-
-  const sendSyncPlay = (targetScreens, timestamp) => {
-    emit("sync_play", { targetScreens, timestamp });
-  };
-
-  const sendSyncPause = (targetScreens, timestamp) => {
-    emit("sync_pause", { targetScreens, timestamp });
   };
 
   return {

@@ -93,13 +93,13 @@ const FullScreenView = ({ assignments, onClose, globalTimer3, globalTimers, scre
         active: false,
         inDelay: false,
         shouldRestart: false,
-        timeLeft: timerValues.timer1?.duration || 60,
-        delayTimeLeft: timerValues.timer1?.delay || 30
+        timeLeft: timerValues.timer1.duration || 60,
+        delayTimeLeft: timerValues.timer1.delay || 30
       },
       timer2: {
         active: false,
         shouldRestart: false,
-        timeLeft: timerValues.timer2?.duration || 60
+        timeLeft: timerValues.timer2.duration || 60
       }
     });
   }, [stopAllTimers, setIsAllPlaying, setTimerStates, globalTimer3, timerValues]);
@@ -137,19 +137,8 @@ const FullScreenView = ({ assignments, onClose, globalTimer3, globalTimers, scre
           }
         });
 
-        setTimerStates({
-          global: { timeLeft: globalTimer3 || 2700, active: true },
-          timer1: {
-            timeLeft: timerValues.timer1.duration,
-            active: true,
-            inDelay: false,
-            delayTimeLeft: timerValues.timer1.delay,
-            shouldRestart: false
-          },
-          timer2: { timeLeft: timerValues.timer2.duration, active: true, shouldRestart: false }
-        });
-
         setIsAllPlaying(true);
+        startAllTimers();
       }
     };
 
@@ -169,12 +158,52 @@ const FullScreenView = ({ assignments, onClose, globalTimer3, globalTimers, scre
       }
     };
 
-    window.addEventListener("websocket-sync-play", handleSyncPlay);
-    window.addEventListener("websocket-sync-pause", handleSyncPause);
+    const handleSyncStop = (event) => {
+      const { targetScreens } = event.detail;
+      if (targetScreens.includes(screenId)) {
+        console.log("⏹️ FullScreenView responding to sync stop");
+
+        videoRefs.current.forEach((ref, index) => {
+          if (ref && assignments[index] && ref.syncPause) {
+            ref.syncPause();
+          }
+        });
+
+        setTimerStates({
+          global: { timeLeft: globalTimer3 || 2700, active: true },
+          timer1: {
+            active: true,
+            inDelay: false,
+            shouldRestart: false,
+            timeLeft: timerValues.timer1.duration || 60,
+            delayTimeLeft: timerValues.timer1.delay || 30
+          },
+          timer2: {
+            active: true,
+            shouldRestart: false,
+            timeLeft: timerValues.timer2.duration || 60
+          }
+        });
+
+        setIsAllPlaying(false);
+        stopAllTimers();
+      }
+    };
+
+    const events = [
+      ["play", handleSyncPlay],
+      ["pause", handleSyncPause],
+      ["stop", handleSyncStop]
+    ];
+
+    events.forEach(([action, listener]) => {
+      window.addEventListener(`websocket-sync-${action}`, listener);
+    });
 
     return () => {
-      window.removeEventListener("websocket-sync-play", handleSyncPlay);
-      window.removeEventListener("websocket-sync-pause", handleSyncPause);
+      events.forEach(([action, listener]) => {
+        window.removeEventListener(`websocket-sync-${action}`, listener);
+      });
     };
   }, [screenId, assignments, globalTimer3, timerValues, setTimerStates, stopAllTimers]);
 
@@ -233,11 +262,11 @@ const FullScreenView = ({ assignments, onClose, globalTimer3, globalTimers, scre
       )}
 
       <FullscreenHeader
+        onClose={onClose}
+        onReset={handleResetAll}
         timerStates={timerStates}
         timerValues={timerValues}
         globalTimer3={globalTimer3}
-        onClose={onClose}
-        onReset={handleResetAll}
         onWorkoutScreenToggle={handleWorkoutScreenToggle}
       />
 

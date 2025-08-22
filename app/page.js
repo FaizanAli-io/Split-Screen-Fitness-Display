@@ -3,7 +3,7 @@ import { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useWebSocket } from "@/hooks/useWebSocket";
-import { Monitor, Settings, Eye, Play, Pause, Check, WifiOff } from "lucide-react";
+import { Monitor, Settings, Eye, Play, Pause, StopCircle, Check, WifiOff } from "lucide-react";
 
 const SCREEN_COUNT = 4;
 
@@ -20,17 +20,21 @@ export default function ScreenControlPanel() {
 
   useEffect(() => {
     if (!socket) return;
+
     const handleSyncAck = (data) => {
-      setIsPlaying(data.action === "play");
       setIsLoading(false);
       setLastAction(data.action);
+      setIsPlaying(data.action === "play");
       setTimeout(() => setLastAction(null), 2000);
     };
+
     const handleScreenStatus = (data) => {
       setScreenStatuses((prev) => new Map(prev.set(data.screenId, data.status)));
     };
+
     socket.on("sync_command_ack", handleSyncAck);
     socket.on("screen_status_update", handleScreenStatus);
+
     return () => {
       socket.off("sync_command_ack", handleSyncAck);
       socket.off("screen_status_update", handleScreenStatus);
@@ -56,17 +60,17 @@ export default function ScreenControlPanel() {
   const performSyncAction = useCallback(
     (action) => {
       if (!selectedScreens.size) return alert("Please select at least one screen to control");
+
       if (!isConnected)
         return alert("Not connected to WebSocket server. Please check your connection.");
-      const targetScreens = Array.from(selectedScreens);
+
       setIsLoading(true);
       setLastAction(action);
+      const targetScreens = Array.from(selectedScreens);
+
       try {
-        emit(action === "play" ? "sync_play" : "sync_pause", {
-          targetScreens,
-          timestamp: Date.now()
-        });
         setTimeout(() => setIsLoading(false), 3000);
+        emit(`sync_${action}`, { targetScreens, timestamp: Date.now() });
       } catch {
         setIsLoading(false);
         alert(`Failed to ${action} selected screens via WebSocket. Please try again.`);
@@ -75,14 +79,35 @@ export default function ScreenControlPanel() {
     [selectedScreens, isConnected, emit]
   );
 
-  const handleSyncPlay = () => performSyncAction("play");
-  const handleSyncPause = () => performSyncAction("pause");
-
   const getScreenStatus = (screenId) => {
-    const isScreenConnected = connectedScreens.includes(screenId);
+    const screenData = connectedScreens.find((s) => s.screenId === screenId);
+    const socketCount = screenData ? screenData.count : 0;
     const status = screenStatuses.get(screenId);
-    return { isConnected: isScreenConnected, status: status || "unknown" };
+    const isScreenConnected = !!screenData;
+
+    return { isConnected: isScreenConnected, sockets: socketCount, status: status || "unknown" };
   };
+
+  function ActionButton({ task, disabled, active, color, icon: Icon }) {
+    return (
+      <Button
+        disabled={disabled}
+        onClick={() => performSyncAction(task)}
+        className={`group/btn h-20 w-32 flex flex-col items-center justify-center gap-2 ${
+          active
+            ? `$bg-${color}-600 hover:bg-${color}-700 border-${color}-500`
+            : `bg-${color}-500/20 hover:bg-${color}-500/30 border-${color}-500/30`
+        }`}
+      >
+        <Icon
+          className={`h-8 w-8 text-${color}-300 group-hover/btn:scale-110 transition-transform`}
+        />
+        <span className={`text-sm font-medium text-${color}-300`}>
+          {task.charAt(0).toUpperCase() + task.slice(1)} All
+        </span>
+      </Button>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-8">
@@ -161,7 +186,11 @@ export default function ScreenControlPanel() {
                         {isSelected && <Check className="h-4 w-4 ml-auto" />}
                       </div>
                       <div className="text-xs mt-1 opacity-70">
-                        {screenConnected ? "Online" : "Offline"}
+                        {screenConnected
+                          ? `Online (${getScreenStatus(screenId).sockets} display${
+                              getScreenStatus(screenId).sockets > 1 ? "s" : ""
+                            })`
+                          : "Offline"}
                       </div>
                     </button>
                   );
@@ -179,32 +208,31 @@ export default function ScreenControlPanel() {
             </div>
             <div className="space-y-3">
               <h3 className="text-lg font-medium text-white">WebSocket Synchronized Playback</h3>
+
               <div className="flex gap-4 justify-center">
-                <Button
-                  onClick={handleSyncPlay}
+                <ActionButton
+                  task="play"
                   disabled={isLoading || !selectedScreens.size || !isConnected}
-                  className={`group/btn h-20 w-32 flex flex-col items-center justify-center gap-2 ${
-                    isPlaying && lastAction === "play"
-                      ? "bg-green-600 hover:bg-green-700 border-green-500"
-                      : "bg-green-500/20 hover:bg-green-500/30 border-green-500/30"
-                  }`}
-                >
-                  <Play className="h-8 w-8 text-green-300 group-hover/btn:scale-110 transition-transform" />
-                  <span className="text-sm font-medium text-green-300">Play All</span>
-                </Button>
-                <Button
-                  onClick={handleSyncPause}
+                  active={isPlaying && lastAction === "play"}
+                  color="green"
+                  icon={Play}
+                />
+                <ActionButton
+                  task="pause"
                   disabled={isLoading || !selectedScreens.size || !isConnected}
-                  className={`group/btn h-20 w-32 flex flex-col items-center justify-center gap-2 ${
-                    !isPlaying && lastAction === "pause"
-                      ? "bg-yellow-600 hover:bg-yellow-700 border-yellow-500"
-                      : "bg-yellow-500/20 hover:bg-yellow-500/30 border-yellow-500/30"
-                  }`}
-                >
-                  <Pause className="h-8 w-8 text-yellow-300 group-hover/btn:scale-110 transition-transform" />
-                  <span className="text-sm font-medium text-yellow-300">Pause All</span>
-                </Button>
+                  active={!isPlaying && lastAction === "pause"}
+                  color="yellow"
+                  icon={Pause}
+                />
+                <ActionButton
+                  task="stop"
+                  disabled={isLoading || !selectedScreens.size || !isConnected}
+                  active={lastAction === "stop"}
+                  color="red"
+                  icon={StopCircle}
+                />
               </div>
+
               {isLoading && (
                 <div className="flex items-center justify-center gap-2 text-blue-300">
                   <div className="w-4 h-4 border-2 border-blue-300 border-t-transparent rounded-full animate-spin"></div>
@@ -290,11 +318,17 @@ export default function ScreenControlPanel() {
                       </div>
                     </div>
                     <p className="text-sm text-slate-400">
-                      Status: {screenConnected ? "Connected" : "Disconnected"} • Resolution:
-                      1920x1080
+                      Status:{" "}
+                      {screenConnected
+                        ? `Connected (${getScreenStatus(screenId).sockets} display${
+                            getScreenStatus(screenId).sockets > 1 ? "s" : ""
+                          }) `
+                        : "Not Connected "}
                       {isSelected && (
                         <span className="text-green-400 ml-2">• Selected for sync</span>
                       )}
+                      <br />
+                      Resolution: 1920x1080
                     </p>
                   </CardHeader>
                   <CardContent className="space-y-4">
