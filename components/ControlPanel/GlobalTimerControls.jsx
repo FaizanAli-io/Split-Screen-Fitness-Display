@@ -1,6 +1,7 @@
 import React from "react";
 import { Input } from "../ui/input";
-import { Timer, Globe, Clock, MessageSquare, Zap, Activity } from "lucide-react";
+import { Checkbox } from "../ui/checkbox";
+import { Timer, Globe, Clock, MessageSquare, Activity, Pause } from "lucide-react";
 
 const GlobalTimerControls = ({
   globalTimers,
@@ -9,7 +10,8 @@ const GlobalTimerControls = ({
   handleGlobalTimer3Change,
   handleGlobalTimer4Change,
   handleDelayText1Change,
-  handleDelay1Change
+  handleDelay1Change,
+  handlePauseOnTimer2Change
 }) => {
   return (
     <div className="mb-6">
@@ -115,6 +117,29 @@ const GlobalTimerControls = ({
               className="bg-slate-700/50 border-green-500/50 text-slate-200 placeholder-slate-400 focus:border-green-400 focus:ring-green-400 hover:bg-slate-700 transition-colors"
             />
           </div>
+        </div>
+
+        {/* Pause on Timer 2 checkbox */}
+        <div className="mt-6 p-4 bg-gradient-to-r from-purple-900/20 to-indigo-900/20 border border-purple-700/50 rounded-xl">
+          <div className="flex items-center space-x-3">
+            <Checkbox
+              id="pauseOnTimer2"
+              checked={globalTimers.pauseOnTimer2 || false}
+              onCheckedChange={handlePauseOnTimer2Change}
+              className="data-[state=checked]:bg-purple-500 data-[state=checked]:border-purple-500"
+            />
+            <label
+              htmlFor="pauseOnTimer2"
+              className="flex items-center gap-2 text-sm font-medium text-purple-300 cursor-pointer"
+            >
+              <Pause className="w-4 h-4 text-purple-400" />
+              Pause all videos and timers when Middle-Top Timer expires
+            </label>
+          </div>
+          <p className="text-xs text-purple-300/70 mt-2 ml-7">
+            When enabled, all videos and timers will pause when the Middle-Top Timer completes,
+            triggering the class countdown screen.
+          </p>
         </div>
       </div>
     </div>

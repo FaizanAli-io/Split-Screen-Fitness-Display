@@ -60,12 +60,17 @@ export const useTimerControls = (globalTimers, setGlobalTimers, assignments, set
     setAssignments(updated);
   };
 
+  const handlePauseOnTimer2Change = (checked) => {
+    setGlobalTimers((prev) => ({ ...prev, pauseOnTimer2: checked }));
+  };
+
   return {
     handleGlobalTimer1Change,
     handleGlobalTimer2Change,
     handleGlobalTimer3Change,
     handleGlobalTimer4Change,
+    handleDelayText1Change,
     handleDelay1Change,
-    handleDelayText1Change
+    handlePauseOnTimer2Change
   };
 };

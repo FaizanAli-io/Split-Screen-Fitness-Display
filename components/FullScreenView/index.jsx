@@ -37,7 +37,14 @@ const FullScreenView = ({ screenId, onClose, assignments, globalTimers }) => {
   }, []);
 
   const { timerStates, timerValues, startAllTimers, stopAllTimers, setTimerStates } =
-    useTimerManagement(assignments, globalTimers, isAllPlaying, videoRefs);
+    useTimerManagement(assignments, globalTimers, isAllPlaying, videoRefs, {
+      onTimer2ExpireWithPause: () => {
+        performVideoAction(videoRefs, assignments, "pause");
+        stopAllTimers();
+        setIsAllPlaying(false);
+        setIsCountdownOpen(true);
+      }
+    });
 
   const allVideosReady =
     assignments.every((video, i) => !video || videosReady[i] || videoErrors[i]) || forceShow;

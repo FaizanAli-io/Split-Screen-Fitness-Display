@@ -8,7 +8,7 @@ const clearTimer = (timerRefs, key) => {
   }
 };
 
-const useTimerManagement = (assignments, globalTimers, isAllPlaying, videoRefs) => {
+const useTimerManagement = (assignments, globalTimers, isAllPlaying, videoRefs, callbacks = {}) => {
   const [timerStates, setTimerStates] = useState({
     global: { timeLeft: globalTimers.timer3 || 2700, active: false },
     timer1: {
@@ -204,13 +204,27 @@ const useTimerManagement = (assignments, globalTimers, isAllPlaying, videoRefs) 
     timerRefs.current.timer2 = setInterval(() => {
       setTimerStates((prev) => {
         if (prev.timer2.timeLeft <= 1) {
-          if (videoRefs.current[1] && assignments[1] && videoRefs.current[1].restart) {
-            videoRefs.current[1].restart();
+          // Check if pauseOnTimer2 is enabled
+          if (globalTimers.pauseOnTimer2) {
+            // Trigger the callback to pause everything and show countdown modal
+            if (callbacks.onTimer2ExpireWithPause) {
+              callbacks.onTimer2ExpireWithPause();
+            }
+            // Reset timer to full duration and stop it (will restart after countdown)
+            return {
+              ...prev,
+              timer2: { timeLeft: timerValues.timer2.duration, active: false, shouldRestart: false }
+            };
+          } else {
+            // Normal behavior: restart the video immediately
+            if (videoRefs.current[1] && assignments[1] && videoRefs.current[1].restart) {
+              videoRefs.current[1].restart();
+            }
+            return {
+              ...prev,
+              timer2: { timeLeft: timerValues.timer2.duration, active: true, shouldRestart: true }
+            };
           }
-          return {
-            ...prev,
-            timer2: { timeLeft: timerValues.timer2.duration, active: true, shouldRestart: true }
-          };
         }
         return { ...prev, timer2: { ...prev.timer2, timeLeft: prev.timer2.timeLeft - 1 } };
       });

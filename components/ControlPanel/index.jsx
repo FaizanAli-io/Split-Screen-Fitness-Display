@@ -104,6 +104,7 @@ const ControlPanel = ({
           handleGlobalTimer4Change={timerControls.handleGlobalTimer4Change}
           handleDelayText1Change={timerControls.handleDelayText1Change}
           handleDelay1Change={timerControls.handleDelay1Change}
+          handlePauseOnTimer2Change={timerControls.handlePauseOnTimer2Change}
         />
 
         {/* Display Management Section */}

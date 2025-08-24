@@ -32,7 +32,8 @@ export default function Home() {
     timer3: 2700,
     timer4: 120,
     delay1: 30,
-    delayText1: "Move to the next station"
+    delayText1: "Move to the next station",
+    pauseOnTimer2: false
   });
 
   const { isConnected, connectedScreens, sendSyncPlay, sendSyncPause } = useWebSocket(screenId);
@@ -163,7 +164,8 @@ export default function Home() {
           timer3: 2700,
           timer4: 120,
           delay1: 30,
-          delayText1: "Move to the next station"
+          delayText1: "Move to the next station",
+          pauseOnTimer2: false
         });
       }
 
