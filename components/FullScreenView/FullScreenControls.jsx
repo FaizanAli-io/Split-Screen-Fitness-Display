@@ -7,6 +7,9 @@ const FullscreenControls = ({
   onPlayPause,
   onMuteUnmute
 }) => {
+  const buttonStyle =
+    "h-12 w-12 p-0 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 transition-all duration-200";
+
   return (
     <div
       className={`absolute bottom-2 left-1/2 transform -translate-x-1/2 transition-opacity duration-300 ${
@@ -18,7 +21,8 @@ const FullscreenControls = ({
           variant="secondary"
           size="lg"
           onClick={onPlayPause}
-          className="h-12 w-12 p-0 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 transition-all duration-200"
+          className={buttonStyle}
+          aria-label={isAllPlaying ? "Pause all videos" : "Play all videos"}
         >
           {isAllPlaying ? (
             <div className="w-4 h-4 bg-white rounded-sm" />
@@ -31,13 +35,10 @@ const FullscreenControls = ({
           variant="secondary"
           size="lg"
           onClick={onMuteUnmute}
-          className="h-12 w-12 p-0 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 transition-all duration-200"
+          className={buttonStyle}
+          aria-label={isAllMuted ? "Unmute all videos" : "Mute all videos"}
         >
-          {isAllMuted ? (
-            <div className="text-white text-lg">🔇</div>
-          ) : (
-            <div className="text-white text-lg">🔊</div>
-          )}
+          <span className="text-white text-lg">{isAllMuted ? "🔇" : "🔊"}</span>
         </Button>
       </div>
     </div>

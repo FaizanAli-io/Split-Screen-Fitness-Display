@@ -7,8 +7,8 @@ import VideoManagement from "./VideoManagement";
 import DisplayManagement from "./DisplayManagement";
 import GlobalTimerControls from "./GlobalTimerControls";
 import PlayerConfiguration from "./PlayerConfiguration";
-import { useVideoOperations } from "../../hooks/useVideoOperations";
 import { useTimerControls } from "../../hooks/useTimerControls";
+import { useVideoOperations } from "../../hooks/useVideoOperations";
 
 const ControlPanel = ({
   videos,
@@ -21,6 +21,7 @@ const ControlPanel = ({
   setVideos
 }) => {
   const videoOperations = useVideoOperations(setVideos, assignments, setAssignments);
+
   const timerControls = useTimerControls(
     globalTimers,
     setGlobalTimers,
@@ -36,8 +37,7 @@ const ControlPanel = ({
 
   const handleRemoveScreen = () => {
     if (assignments.length > 1) {
-      const updated = [...assignments];
-      updated.pop();
+      const updated = assignments.slice(0, -1);
       setAssignments(updated);
     }
   };
@@ -46,8 +46,8 @@ const ControlPanel = ({
     const updated = [...assignments];
     if (!updated[index])
       updated[index] = {
-        url: null,
         name: "",
+        url: null,
         timerDuration: 60,
         delayDuration: 30,
         delayText: "Restarting Video"
@@ -87,9 +87,9 @@ const ControlPanel = ({
           renaming={videoOperations.renaming}
           newName={videoOperations.newName}
           setNewName={videoOperations.setNewName}
-          getVideoDisplayName={videoOperations.getVideoDisplayName}
           handleFileUpload={videoOperations.handleFileUpload}
           handleDeleteVideo={videoOperations.handleDeleteVideo}
+          getVideoDisplayName={videoOperations.getVideoDisplayName}
           startRename={videoOperations.startRename}
           cancelRename={videoOperations.cancelRename}
           submitRename={videoOperations.submitRename}
@@ -102,8 +102,8 @@ const ControlPanel = ({
           handleGlobalTimer2Change={timerControls.handleGlobalTimer2Change}
           handleGlobalTimer3Change={timerControls.handleGlobalTimer3Change}
           handleGlobalTimer4Change={timerControls.handleGlobalTimer4Change}
-          handleDelay1Change={timerControls.handleDelay1Change}
           handleDelayText1Change={timerControls.handleDelayText1Change}
+          handleDelay1Change={timerControls.handleDelay1Change}
         />
 
         {/* Display Management Section */}

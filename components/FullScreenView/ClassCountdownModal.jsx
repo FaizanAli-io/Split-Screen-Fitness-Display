@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Button } from "../ui/button";
 import { X, Timer } from "lucide-react";
+import { Button } from "../ui/button";
+import { formatTime } from "./utils";
 
 const ClassCountdownModal = ({
   isOpen,
@@ -42,20 +43,14 @@ const ClassCountdownModal = ({
     };
   }, [isActive, timeLeft, onComplete]);
 
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
-
   const getProgressPercentage = () => {
     return ((countdownSeconds - timeLeft) / countdownSeconds) * 100;
   };
 
   const getTimerColor = () => {
-    if (timeLeft <= 10) return "#EF4444"; // Red for last 10 seconds
-    if (timeLeft <= 30) return "#F59E0B"; // Orange for last 30 seconds
-    return "#10B981"; // Green for normal countdown
+    if (timeLeft <= 10) return "#EF4444";
+    if (timeLeft <= 30) return "#F59E0B";
+    return "#10B981";
   };
 
   if (!isOpen) return null;

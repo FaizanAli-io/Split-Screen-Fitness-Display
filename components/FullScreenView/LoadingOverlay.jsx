@@ -1,9 +1,16 @@
 import VideoLoadingCard from "./VideoLoadingCard";
 
 const LoadingOverlay = ({ assignments, videosReady, videoErrors }) => {
+  const activeAssignments = assignments.filter(Boolean);
   const readyCount = videosReady.filter(Boolean).length + videoErrors.filter(Boolean).length;
-  const totalCount = assignments.filter(Boolean).length;
-  const progressPercentage = (readyCount / totalCount) * 100;
+  const totalCount = activeAssignments.length;
+  const progressPercentage = totalCount > 0 ? (readyCount / totalCount) * 100 : 0;
+  const gridCols = Math.min(3, activeAssignments.length);
+
+  if (totalCount === 0) {
+    console.log("No active assignments, skipping loading overlay");
+    return null;
+  }
 
   return (
     <div className="absolute inset-0 z-50 bg-black/95 backdrop-blur-sm">
@@ -17,7 +24,7 @@ const LoadingOverlay = ({ assignments, videosReady, videoErrors }) => {
           <div
             className="grid gap-6 max-w-7xl mx-auto"
             style={{
-              gridTemplateColumns: `repeat(${Math.min(3, assignments.length)}, 1fr)`,
+              gridTemplateColumns: `repeat(${gridCols}, 1fr)`,
               gridAutoRows: "min-content"
             }}
           >

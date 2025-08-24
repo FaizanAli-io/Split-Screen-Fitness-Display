@@ -114,11 +114,21 @@ export const useWebSocket = (screenId = null) => {
     }
   };
 
+  const sendSyncPlay = (targetScreens, timestamp) => {
+    emit("sync_play", { targetScreens, timestamp });
+  };
+
+  const sendSyncPause = (targetScreens, timestamp) => {
+    emit("sync_pause", { targetScreens, timestamp });
+  };
+
   return {
+    emit,
     socket,
     isConnected,
     connectedScreens,
-    emit
+    sendSyncPlay,
+    sendSyncPause
   };
 };
 

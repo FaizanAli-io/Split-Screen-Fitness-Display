@@ -2,37 +2,48 @@ import { useSearchParams } from "next/navigation";
 import React, { useEffect, useState, useRef, useCallback } from "react";
 
 import useTimerManagement from "./useTimerManagement";
+import { createTimerState, performVideoAction } from "./utils";
 
 import VideoGrid from "./VideoGrid";
 import LoadingOverlay from "./LoadingOverlay";
 import FullscreenHeader from "./FullScreenHeader";
-import RectangularTimer from "./RectangularTimer";
 import FullscreenControls from "./FullScreenControls";
 import ClassCountdownModal from "./ClassCountdownModal";
 
-const CURSOR_HIDE_DELAY = 3000;
+const CURSOR_HIDE_DELAY = 2000;
 
-const FullScreenView = ({ assignments, onClose, globalTimer3, globalTimers, screenId }) => {
+const FullScreenView = ({ screenId, onClose, assignments, globalTimers }) => {
   const [isAllMuted, setIsAllMuted] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [isAllPlaying, setIsAllPlaying] = useState(false);
   const [isCountdownOpen, setIsCountdownOpen] = useState(false);
   const [videosReady, setVideosReady] = useState(Array(assignments.length).fill(false));
   const [videoErrors, setVideoErrors] = useState(Array(assignments.length).fill(false));
+  const [forceShow, setForceShow] = useState(false);
 
   const videoRefs = useRef([]);
   const cursorTimeoutRef = useRef();
   const searchParams = useSearchParams();
   const originalScreenId = searchParams.get("from");
+  const globalTimer3 = globalTimers.timer3;
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      console.log("Force showing content after 10 seconds");
+      setForceShow(true);
+    }, 10000);
+
+    return () => clearTimeout(timeout);
+  }, []);
 
   const { timerStates, timerValues, startAllTimers, stopAllTimers, setTimerStates } =
-    useTimerManagement(assignments, globalTimer3, globalTimers, isAllPlaying, videoRefs);
+    useTimerManagement(assignments, globalTimers, isAllPlaying, videoRefs);
 
-  const allVideosReady = assignments.every(
-    (video, i) => !video || videosReady[i] || videoErrors[i]
-  );
+  const allVideosReady =
+    assignments.every((video, i) => !video || videosReady[i] || videoErrors[i]) || forceShow;
 
   const handleVideoReady = useCallback((index) => {
+    console.log(`Video ${index} ready`);
     setVideosReady((prev) => {
       const updated = [...prev];
       updated[index] = true;
@@ -41,6 +52,7 @@ const FullScreenView = ({ assignments, onClose, globalTimer3, globalTimers, scre
   }, []);
 
   const handleVideoError = useCallback((index) => {
+    console.log(`Video ${index} error`);
     setVideoErrors((prev) => {
       const updated = [...prev];
       updated[index] = true;
@@ -54,27 +66,18 @@ const FullScreenView = ({ assignments, onClose, globalTimer3, globalTimers, scre
     if (newPlayingState && !isCountdownOpen) {
       setIsCountdownOpen(true);
     } else if (!newPlayingState) {
-      videoRefs.current.forEach((ref, index) => {
-        if (ref && assignments[index]) {
-          ref.pause?.();
-        }
-      });
-
-      setIsAllPlaying(false);
-      stopAllTimers();
+      performVideoAction(videoRefs, assignments, "pause");
     }
+
+    setIsAllPlaying(false);
+    stopAllTimers();
   }, [isAllPlaying, isCountdownOpen, assignments, stopAllTimers]);
 
   const handleCountdownComplete = useCallback(() => {
-    videoRefs.current.forEach((ref, index) => {
-      if (ref && assignments[index]) {
-        ref.play?.();
-      }
-    });
-
     startAllTimers();
     setIsAllPlaying(true);
     setIsCountdownOpen(false);
+    performVideoAction(videoRefs, assignments, "play");
   }, [assignments, startAllTimers]);
 
   const handleCountdownCancel = useCallback(() => {
@@ -82,40 +85,25 @@ const FullScreenView = ({ assignments, onClose, globalTimer3, globalTimers, scre
   }, []);
 
   const handleResetAll = useCallback(() => {
-    videoRefs.current.forEach((ref) => ref?.restart?.());
-    videoRefs.current.forEach((ref) => ref?.pause?.());
+    performVideoAction(videoRefs, assignments, "restart");
+    performVideoAction(videoRefs, assignments, "pause");
     setIsAllPlaying(false);
     stopAllTimers();
-
-    setTimerStates({
-      global: { timeLeft: globalTimer3 || 2700, active: false },
-      timer1: {
-        active: false,
-        inDelay: false,
-        shouldRestart: false,
-        timeLeft: timerValues.timer1.duration || 60,
-        delayTimeLeft: timerValues.timer1.delay || 30
-      },
-      timer2: {
-        active: false,
-        shouldRestart: false,
-        timeLeft: timerValues.timer2.duration || 60
-      }
-    });
-  }, [stopAllTimers, setIsAllPlaying, setTimerStates, globalTimer3, timerValues]);
+    setTimerStates(
+      createTimerState(
+        globalTimer3,
+        timerValues.timer1.duration,
+        timerValues.timer2.duration,
+        timerValues.timer1.delay
+      )
+    );
+  }, [stopAllTimers, globalTimer3, timerValues, setTimerStates]);
 
   const handleMuteUnmuteAll = useCallback(() => {
-    videoRefs.current.forEach((ref) => {
-      if (ref) {
-        if (isAllMuted) {
-          ref.unmute?.();
-        } else {
-          ref.mute?.();
-        }
-      }
-    });
+    const action = isAllMuted ? "unmute" : "mute";
+    performVideoAction(videoRefs, assignments, action);
     setIsAllMuted(!isAllMuted);
-  }, [isAllMuted]);
+  }, [isAllMuted, assignments]);
 
   const handleWorkoutScreenToggle = useCallback(() => {
     const onWarmupScreen = screenId === "4";
@@ -126,86 +114,59 @@ const FullScreenView = ({ assignments, onClose, globalTimer3, globalTimers, scre
   }, [screenId, originalScreenId]);
 
   useEffect(() => {
-    const handleSyncPlay = (event) => {
+    const createSyncHandler = (action) => (event) => {
       const { targetScreens } = event.detail;
-      if (targetScreens.includes(screenId)) {
-        console.log("🎬 FullScreenView responding to sync play");
+      if (!targetScreens.includes(screenId)) return;
 
-        videoRefs.current.forEach((ref, index) => {
-          if (ref && assignments[index] && ref.syncPlay) {
-            ref.syncPlay();
-          }
-        });
+      console.log(`FullScreenView responding to sync ${action}`);
 
-        setIsAllPlaying(true);
-        startAllTimers();
+      if (action === "stop") {
+        setTimerStates(
+          createTimerState(
+            globalTimer3,
+            timerValues.timer1.duration,
+            timerValues.timer2.duration,
+            timerValues.timer1.delay
+          )
+        );
       }
-    };
 
-    const handleSyncPause = (event) => {
-      const { targetScreens } = event.detail;
-      if (targetScreens.includes(screenId)) {
-        console.log("⏸️ FullScreenView responding to sync pause");
+      performVideoAction(videoRefs, assignments, "syncPause");
 
-        videoRefs.current.forEach((ref, index) => {
-          if (ref && assignments[index] && ref.syncPause) {
-            ref.syncPause();
-          }
-        });
-
+      if (action === "play") {
+        if (!isAllPlaying && !isCountdownOpen) {
+          setIsCountdownOpen(true);
+        }
+      } else {
         setIsAllPlaying(false);
         stopAllTimers();
       }
     };
 
-    const handleSyncStop = (event) => {
-      const { targetScreens } = event.detail;
-      if (targetScreens.includes(screenId)) {
-        console.log("⏹️ FullScreenView responding to sync stop");
-
-        videoRefs.current.forEach((ref, index) => {
-          if (ref && assignments[index] && ref.syncPause) {
-            ref.syncPause();
-          }
-        });
-
-        setTimerStates({
-          global: { timeLeft: globalTimer3 || 2700, active: true },
-          timer1: {
-            active: true,
-            inDelay: false,
-            shouldRestart: false,
-            timeLeft: timerValues.timer1.duration || 60,
-            delayTimeLeft: timerValues.timer1.delay || 30
-          },
-          timer2: {
-            active: true,
-            shouldRestart: false,
-            timeLeft: timerValues.timer2.duration || 60
-          }
-        });
-
-        setIsAllPlaying(false);
-        stopAllTimers();
-      }
+    const handlers = {
+      "websocket-sync-play": createSyncHandler("play"),
+      "websocket-sync-pause": createSyncHandler("pause"),
+      "websocket-sync-stop": createSyncHandler("stop")
     };
 
-    const events = [
-      ["play", handleSyncPlay],
-      ["pause", handleSyncPause],
-      ["stop", handleSyncStop]
-    ];
-
-    events.forEach(([action, listener]) => {
-      window.addEventListener(`websocket-sync-${action}`, listener);
+    Object.entries(handlers).forEach(([event, handler]) => {
+      window.addEventListener(event, handler);
     });
 
     return () => {
-      events.forEach(([action, listener]) => {
-        window.removeEventListener(`websocket-sync-${action}`, listener);
+      Object.entries(handlers).forEach(([event, handler]) => {
+        window.removeEventListener(event, handler);
       });
     };
-  }, [screenId, assignments, globalTimer3, timerValues, setTimerStates, stopAllTimers]);
+  }, [
+    screenId,
+    assignments,
+    globalTimer3,
+    timerValues,
+    setTimerStates,
+    stopAllTimers,
+    startAllTimers
+  ]);
 
   useEffect(() => {
     const handleKeyPress = (e) => {
@@ -298,4 +259,3 @@ const FullScreenView = ({ assignments, onClose, globalTimer3, globalTimers, scre
 };
 
 export default FullScreenView;
-export { RectangularTimer };

@@ -8,8 +8,8 @@ const GlobalTimerControls = ({
   handleGlobalTimer2Change,
   handleGlobalTimer3Change,
   handleGlobalTimer4Change,
-  handleDelay1Change,
-  handleDelayText1Change
+  handleDelayText1Change,
+  handleDelay1Change
 }) => {
   return (
     <div className="mb-6">

@@ -1,8 +1,16 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { playBeepSound } from "./utils";
 
-const useTimerManagement = (assignments, globalTimer3, globalTimers, isAllPlaying, videoRefs) => {
+const clearTimer = (timerRefs, key) => {
+  if (timerRefs.current[key]) {
+    clearInterval(timerRefs.current[key]);
+    timerRefs.current[key] = null;
+  }
+};
+
+const useTimerManagement = (assignments, globalTimers, isAllPlaying, videoRefs) => {
   const [timerStates, setTimerStates] = useState({
-    global: { timeLeft: globalTimer3 || 2700, active: false },
+    global: { timeLeft: globalTimers.timer3 || 2700, active: false },
     timer1: {
       timeLeft: globalTimers?.timer1 || 60,
       active: false,
@@ -57,14 +65,13 @@ const useTimerManagement = (assignments, globalTimer3, globalTimers, isAllPlayin
     setTimerStates((prev) => ({
       ...prev,
       global: { ...prev.global, active: true },
-      timer1: { ...prev.timer1, active: true, inDelay: false },
+      timer1: { ...prev.timer1, active: true },
       timer2: { ...prev.timer2, active: true }
     }));
   }, []);
 
   const stopAllTimers = useCallback(() => {
-    Object.values(timerRefs.current).forEach((ref) => ref && clearInterval(ref));
-    timerRefs.current = { global: null, timer1: null, timer2: null };
+    Object.keys(timerRefs.current).forEach((key) => clearTimer(timerRefs, key));
 
     setTimerStates((prev) => ({
       ...prev,
@@ -151,6 +158,9 @@ const useTimerManagement = (assignments, globalTimer3, globalTimers, isAllPlayin
           };
         } else {
           if (prev.timer1.timeLeft <= 1) {
+            console.log("🔔 Station timer ended - playing beep sound");
+            playBeepSound();
+
             return {
               ...prev,
               timer1: {

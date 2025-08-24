@@ -11,6 +11,19 @@ const VideoGrid = ({
   const gridCols = Math.ceil(Math.sqrt(assignments.length));
   const gridRows = Math.ceil(assignments.length / gridCols);
 
+  const getExternalTimer = (index) => {
+    return index !== 1
+      ? {
+          inDelay: timerStates.timer1.inDelay,
+          timeLeft: timerStates.timer1.timeLeft,
+          delayDuration: timerValues.timer1.delay,
+          delayText: timerValues.timer1.delayText,
+          delayTimeLeft: timerStates.timer1.delayTimeLeft,
+          shouldRestart: timerStates.timer1.shouldRestart
+        }
+      : null;
+  };
+
   return (
     <div
       className="flex-1 p-3 grid gap-2"
@@ -31,18 +44,7 @@ const VideoGrid = ({
             globalTimer3={timerStates.global.timeLeft}
             timer2TimeLeft={timerStates.timer2.timeLeft}
             timer2Active={timerStates.timer2.active}
-            externalTimer={
-              index !== 1
-                ? {
-                    timeLeft: timerStates.timer1.timeLeft,
-                    inDelay: timerStates.timer1.inDelay,
-                    delayTimeLeft: timerStates.timer1.delayTimeLeft,
-                    delayDuration: timerValues.timer1.delay,
-                    delayText: timerValues.timer1.delayText,
-                    shouldRestart: timerStates.timer1.shouldRestart
-                  }
-                : null
-            }
+            externalTimer={getExternalTimer(index)}
             onReadyToPlay={() => onVideoReady(index)}
             onVideoError={() => onVideoError(index)}
           />
